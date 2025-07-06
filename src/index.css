@@ -1,9 +1,8 @@
+@import 'katex/dist/katex.min.css'; /* ✅ 최상단으로 이동 */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* KaTeX CSS for math rendering */
-@import 'katex/dist/katex.min.css';
 
 /* Custom math styling */
 .math-display {
