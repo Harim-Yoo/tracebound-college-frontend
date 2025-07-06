@@ -14,7 +14,7 @@ export async function callBackendAPI(problem: string, subject: Subject): Promise
     if (!response.ok) throw new Error(`Status ${response.status}`);
     const data = await response.json();
 
-    return { success: true, reasoning: data.reasoning };
+    return { success: true, reasoning: data.solution };
   } catch (error: any) {
     console.error('❌ API Error:', error);
     return { success: false, error: error?.message || 'Failed to connect to reasoning API.' };
