@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { Brain, Search, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -18,24 +18,17 @@ const mathJaxConfig = {
 };
 
 export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDisplayProps) {
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // 강제로 MathJax 렌더링 트리거
-    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-      window.MathJax.typesetPromise();
-    }
-  }, [reasoning, audit]);
-
   const renderInlineLatex = (text: string, index: number) => {
-    const parts = text.split(/(\\\(.*?\\\))/g); // \( ... \) 구분
-
+    const parts = text.split(/(\\\(.*?\\\))/g);
     return (
       <p key={index} className="text-gray-600 mb-3 leading-relaxed">
         {parts.map((part, i) => {
           if (part.startsWith("\\(") && part.endsWith("\\)")) {
-            const latex = part.slice(2, -2).trim();
-            return <MathJax key={i}>{`\\(${latex}\\)`}</MathJax>;
+            return (
+              <MathJax key={i} dynamic inline>
+                {part}
+              </MathJax>
+            );
           }
           return <span key={i}>{part}</span>;
         })}
@@ -49,10 +42,9 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
       if (trimmed === '') return <br key={index} />;
 
       if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
-        const latex = trimmed.slice(2, -2).trim();
         return (
           <div key={index} className="text-gray-600 mb-4 bg-gray-50 p-4 rounded text-center font-mono">
-            <MathJax>{`\\[${latex}\\]`}</MathJax>
+            <MathJax dynamic>{trimmed}</MathJax>
           </div>
         );
       }
@@ -162,7 +154,7 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
 
   return (
     <MathJaxContext version={3} config={mathJaxConfig}>
-      <div className="w-full max-w-4xl mx-auto space-y-8" ref={contentRef}>
+      <div className="w-full max-w-4xl mx-auto space-y-8">
         {reasoning && (
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
             <div className="flex items-center gap-3 mb-6">
