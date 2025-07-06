@@ -1,20 +1,11 @@
 import React from 'react';
 import { GraduationCap, Sparkles, LogOut } from 'lucide-react';
-import { MathJaxContext } from 'better-react-mathjax';
-
 import { AuthScreen } from './components/AuthScreen';
 import { ChatInterface } from './components/ChatInterface';
 import { SessionManager } from './components/SessionManager';
 import { useChatSessions } from './hooks/useChatSessions';
 import { useAuth } from './hooks/useAuth';
-
-const mathJaxConfig = {
-  loader: { load: ["input/tex", "output/chtml"] },
-  tex: {
-    inlineMath: [["\\(", "\\)"]],
-    displayMath: [["\\[", "\\]"]],
-  },
-};
+import { MathJaxContext } from 'better-react-mathjax';  // ✅ 추가됨
 
 function App() {
   const { isAuthenticated, authenticate, logout } = useAuth();
@@ -35,12 +26,13 @@ function App() {
     }
   };
 
+  // Show auth screen if not authenticated
   if (!isAuthenticated) {
     return <AuthScreen onAuthenticated={authenticate} />;
   }
 
   return (
-    <MathJaxContext version={3} config={mathJaxConfig}>
+    <MathJaxContext> {/* ✅ 여기서부터 감싸줌 */}
       <div className="h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex flex-col">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 px-6 py-4">
