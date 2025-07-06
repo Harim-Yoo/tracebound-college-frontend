@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Download, AlertTriangle, CheckCircle, Camera, FileText, Copy } from 'lucide-react';
 import { ChatMessage, Subject } from '../types';
 import { ImageUpload } from './ImageUpload';
-import { BackendStatus } from './BackendStatus';
 
 interface ChatInterfaceProps {
   subject: Subject;
