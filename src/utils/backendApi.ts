@@ -5,7 +5,7 @@ const API_BASE = 'https://tracebound-college-backend.onrender.com/api';
 // === Reasoning API ===
 export async function callBackendAPI(problem: string, subject: Subject): Promise<{ success: boolean; reasoning?: string; error?: string }> {
   try {
-    const response = await fetch(`${API_BASE}/reason`, {
+    const response = await fetch(`${API_BASE}/solve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ problem, subject })
