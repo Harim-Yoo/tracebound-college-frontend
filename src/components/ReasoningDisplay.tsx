@@ -1,5 +1,5 @@
 import React from 'react';
-import MathJax from 'react-mathjax';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { Brain, Search, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface ReasoningDisplayProps {
@@ -9,49 +9,40 @@ interface ReasoningDisplayProps {
 }
 
 export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDisplayProps) {
-  // ⬇️ Handle lines with multiple inline \( ... \) LaTeX expressions
   const renderInlineLatex = (text: string, index: number) => {
     const parts = text.split(/(\\\(.*?\\\))/g); // split at each \( ... \)
 
     return (
-      <MathJax.Provider key={index}>
-        <p className="text-gray-600 mb-3 leading-relaxed">
-          {parts.map((part, i) => {
-            if (part.startsWith("\\(") && part.endsWith("\\)")) {
-              const latex = part.slice(2, -2).trim();
-              return <MathJax.Node inline key={i} formula={latex} />;
-            }
-            return <span key={i}>{part}</span>;
-          })}
-        </p>
-      </MathJax.Provider>
+      <p key={index} className="text-gray-600 mb-3 leading-relaxed">
+        {parts.map((part, i) => {
+          if (part.startsWith("\\(") && part.endsWith("\\)")) {
+            const latex = part.slice(2, -2).trim();
+            return <MathJax key={i}>{`\\(${latex}\\)`}</MathJax>;
+          }
+          return <span key={i}>{part}</span>;
+        })}
+      </p>
     );
   };
 
   const formatContent = (content: string) => {
     return content.split('\n').map((line, index) => {
       const trimmed = line.trim();
-
       if (trimmed === '') return <br key={index} />;
 
-      // ✅ Block LaTeX: \[ ... \]
       if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
         const latex = trimmed.slice(2, -2).trim();
         return (
-          <MathJax.Provider key={index}>
-            <div className="text-gray-600 mb-4 bg-gray-50 p-4 rounded text-center font-mono">
-              <MathJax.Node formula={latex} />
-            </div>
-          </MathJax.Provider>
+          <div key={index} className="text-gray-600 mb-4 bg-gray-50 p-4 rounded text-center font-mono">
+            <MathJax>{`\\[${latex}\\]`}</MathJax>
+          </div>
         );
       }
 
-      // ✅ Inline LaTeX (even multiple in one line)
       if (trimmed.includes('\\(') && trimmed.includes('\\)')) {
         return renderInlineLatex(trimmed, index);
       }
 
-      // 🔹 Step title
       if (trimmed.startsWith('Step ')) {
         return (
           <div key={index} className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded-r">
@@ -60,7 +51,6 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
         );
       }
 
-      // 🔹 Intermediate formal check
       if (trimmed.startsWith('Intermediate Formal Check:')) {
         return (
           <div key={index} className="bg-green-50 border-l-4 border-green-400 p-3 mb-3 rounded-r ml-4">
@@ -72,7 +62,6 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
         );
       }
 
-      // 🔹 Bold headings: **Heading**
       if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
         return (
           <h3 key={index} className="font-bold text-xl text-gray-800 mt-6 mb-3 text-purple-700 flex items-center gap-2">
@@ -81,7 +70,6 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
         );
       }
 
-      // 🔹 Sub-headings: *Subheading*
       if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
         return (
           <h4 key={index} className="font-semibold text-lg text-gray-700 mt-4 mb-2 flex items-center gap-2">
@@ -90,7 +78,6 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
         );
       }
 
-      // 🔹 Bullet list
       if (trimmed.startsWith('-')) {
         return (
           <li key={index} className="ml-6 text-gray-600 mb-2 list-disc leading-relaxed">
@@ -99,7 +86,6 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
         );
       }
 
-      // 🔹 Numbered list
       if (/^\d+\./.test(trimmed)) {
         return (
           <li key={index} className="ml-6 text-gray-600 mb-2 list-decimal leading-relaxed">
@@ -108,7 +94,6 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
         );
       }
 
-      // 🔹 ✅ verdict
       if (trimmed.includes('✅')) {
         return (
           <div key={index} className="bg-green-50 border border-green-200 p-3 mb-2 rounded flex items-center gap-2">
@@ -118,7 +103,6 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
         );
       }
 
-      // 🔹 ❌ verdict
       if (trimmed.includes('❌')) {
         return (
           <div key={index} className="bg-red-50 border border-red-200 p-3 mb-2 rounded flex items-center gap-2">
@@ -128,7 +112,6 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
         );
       }
 
-      // Default paragraph
       return (
         <p key={index} className="text-gray-600 mb-3 leading-relaxed">
           {trimmed}
@@ -160,26 +143,28 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
   if (!reasoning && !audit) return null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-8">
-      {reasoning && (
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-          <div className="flex items-center gap-3 mb-6">
-            <Brain className="w-6 h-6 text-purple-600" />
-            <h3 className="text-xl font-semibold text-gray-800">Transparent Reasoning (AI)</h3>
+    <MathJaxContext version={3}>
+      <div className="w-full max-w-4xl mx-auto space-y-8">
+        {reasoning && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
+            <div className="flex items-center gap-3 mb-6">
+              <Brain className="w-6 h-6 text-purple-600" />
+              <h3 className="text-xl font-semibold text-gray-800">Transparent Reasoning (AI)</h3>
+            </div>
+            <div className="prose max-w-none">{formatContent(reasoning)}</div>
           </div>
-          <div className="prose max-w-none">{formatContent(reasoning)}</div>
-        </div>
-      )}
+        )}
 
-      {audit && (
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-          <div className="flex items-center gap-3 mb-6">
-            <Search className="w-6 h-6 text-teal-600" />
-            <h3 className="text-xl font-semibold text-gray-800">Self-Audit Result</h3>
+        {audit && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
+            <div className="flex items-center gap-3 mb-6">
+              <Search className="w-6 h-6 text-teal-600" />
+              <h3 className="text-xl font-semibold text-gray-800">Self-Audit Result</h3>
+            </div>
+            <div className="prose max-w-none">{formatContent(audit)}</div>
           </div>
-          <div className="prose max-w-none">{formatContent(audit)}</div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </MathJaxContext>
   );
 }
