@@ -3,7 +3,7 @@ import { Subject } from '../types';
 const API_BASE = 'https://tracebound-college-backend.onrender.com/api';
 
 // === Reasoning API ===
-export async function callBackendAPI(problem: string, subject: Subject): Promise<{ success: boolean; reasoning?: string; error?: string }> {
+export async function callBackendAPI(problem: string, subject: Subject) {
   try {
     const response = await fetch(`${API_BASE}/solve`, {
       method: 'POST',
@@ -11,15 +11,18 @@ export async function callBackendAPI(problem: string, subject: Subject): Promise
       body: JSON.stringify({ problem, subject })
     });
 
-    if (!response.ok) throw new Error(`Status ${response.status}`);
     const data = await response.json();
+    console.log("📦 Response from backend:", data);
 
-    return { success: true, reasoning: data.solution };
+    if (!response.ok) throw new Error(data.error || `Status ${response.status}`);
+
+    return { success: true, reasoning: data.solution || data.reasoning };  // 혹시 몰라 fallback
   } catch (error: any) {
     console.error('❌ API Error:', error);
     return { success: false, error: error?.message || 'Failed to connect to reasoning API.' };
   }
 }
+
 
 // === Audit API ===
 export async function callBackendAudit(reasoning: string): Promise<{ success: boolean; audit?: string; error?: string }> {
