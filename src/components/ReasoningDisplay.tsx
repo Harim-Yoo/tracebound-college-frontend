@@ -1,6 +1,7 @@
 import React from 'react';
 import { MathJax } from 'better-react-mathjax';
 import { Brain, Search, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { autoWrapMath } from '../utils/autoWrapMath';
 
 interface ReasoningDisplayProps {
   reasoning: string;
@@ -26,92 +27,94 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
   const formatContent = (content: string) => {
     return content.split('\n').map((line, index) => {
       const trimmed = line.trim();
-      if (trimmed === '') return <br key={index} />;
+      const wrapped = autoWrapMath(trimmed);
 
-      if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
+      if (wrapped === '') return <br key={index} />;
+
+      if (wrapped.startsWith('\\[') && wrapped.endsWith('\\]')) {
         return (
           <div key={index} className="text-gray-600 mb-4 bg-gray-50 p-4 rounded text-center font-mono">
-            <MathJax>{trimmed}</MathJax>
+            <MathJax>{wrapped}</MathJax>
           </div>
         );
       }
 
-      if (trimmed.includes('\\(') && trimmed.includes('\\)')) {
-        return renderInlineLatex(trimmed, index);
+      if (wrapped.includes('\\(') && wrapped.includes('\\)')) {
+        return renderInlineLatex(wrapped, index);
       }
 
-      if (trimmed.startsWith('Step ')) {
+      if (wrapped.startsWith('Step ')) {
         return (
           <div key={index} className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded-r">
-            <h4 className="font-semibold text-blue-800 mb-2">{trimmed}</h4>
+            <h4 className="font-semibold text-blue-800 mb-2">{wrapped}</h4>
           </div>
         );
       }
 
-      if (trimmed.startsWith('Intermediate Formal Check:')) {
+      if (wrapped.startsWith('Intermediate Formal Check:')) {
         return (
           <div key={index} className="bg-green-50 border-l-4 border-green-400 p-3 mb-3 rounded-r ml-4">
             <p className="text-green-700 text-sm">
               <CheckCircle className="w-4 h-4 inline mr-2" />
-              {trimmed.replace('Intermediate Formal Check:', '').trim()}
+              {wrapped.replace('Intermediate Formal Check:', '').trim()}
             </p>
           </div>
         );
       }
 
-      if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
+      if (wrapped.startsWith('**') && wrapped.endsWith('**')) {
         return (
           <h3 key={index} className="font-bold text-xl text-gray-800 mt-6 mb-3 text-purple-700 flex items-center gap-2">
-            {trimmed.slice(2, -2)}
+            {wrapped.slice(2, -2)}
           </h3>
         );
       }
 
-      if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
+      if (wrapped.startsWith('*') && wrapped.endsWith('*')) {
         return (
           <h4 key={index} className="font-semibold text-lg text-gray-700 mt-4 mb-2 flex items-center gap-2">
-            {trimmed.slice(1, -1)}
+            {wrapped.slice(1, -1)}
           </h4>
         );
       }
 
-      if (trimmed.startsWith('-')) {
+      if (wrapped.startsWith('-')) {
         return (
           <li key={index} className="ml-6 text-gray-600 mb-2 list-disc leading-relaxed">
-            {trimmed.slice(1).trim()}
+            {wrapped.slice(1).trim()}
           </li>
         );
       }
 
-      if (/^\d+\./.test(trimmed)) {
+      if (/^\d+\./.test(wrapped)) {
         return (
           <li key={index} className="ml-6 text-gray-600 mb-2 list-decimal leading-relaxed">
-            {trimmed.replace(/^\d+\.\s*/, '')}
+            {wrapped.replace(/^\d+\.\s*/, '')}
           </li>
         );
       }
 
-      if (trimmed.includes('✅')) {
+      if (wrapped.includes('✅')) {
         return (
           <div key={index} className="bg-green-50 border border-green-200 p-3 mb-2 rounded flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-green-600" />
-            <span className="text-green-700">{trimmed}</span>
+            <span className="text-green-700">{wrapped}</span>
           </div>
         );
       }
 
-      if (trimmed.includes('❌')) {
+      if (wrapped.includes('❌')) {
         return (
           <div key={index} className="bg-red-50 border border-red-200 p-3 mb-2 rounded flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-600" />
-            <span className="text-red-700">{trimmed}</span>
+            <span className="text-red-700">{wrapped}</span>
           </div>
         );
       }
 
       return (
         <p key={index} className="text-gray-600 mb-3 leading-relaxed">
-          {trimmed}
+          {wrapped}
         </p>
       );
     });
