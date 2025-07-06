@@ -1,5 +1,5 @@
 import React from 'react';
-import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import { MathJax } from 'better-react-mathjax';
 import { Brain, Search, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface ReasoningDisplayProps {
@@ -8,15 +8,6 @@ interface ReasoningDisplayProps {
   isLoading: boolean;
 }
 
-const mathJaxConfig = {
-  loader: { load: ["[tex]/ams"] },
-  tex: {
-    inlineMath: [["\\(", "\\)"]],
-    displayMath: [["\\[", "\\]"]],
-    packages: { "[+]": ["ams"] },
-  },
-};
-
 export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDisplayProps) {
   const renderInlineLatex = (text: string, index: number) => {
     const parts = text.split(/(\\\(.*?\\\))/g);
@@ -24,11 +15,7 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
       <p key={index} className="text-gray-600 mb-3 leading-relaxed">
         {parts.map((part, i) => {
           if (part.startsWith("\\(") && part.endsWith("\\)")) {
-            return (
-              <MathJax key={i} dynamic inline>
-                {part}
-              </MathJax>
-            );
+            return <MathJax key={i} inline>{part}</MathJax>;
           }
           return <span key={i}>{part}</span>;
         })}
@@ -44,7 +31,7 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
       if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
         return (
           <div key={index} className="text-gray-600 mb-4 bg-gray-50 p-4 rounded text-center font-mono">
-            <MathJax dynamic>{trimmed}</MathJax>
+            <MathJax>{trimmed}</MathJax>
           </div>
         );
       }
@@ -153,28 +140,26 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
   if (!reasoning && !audit) return null;
 
   return (
-    <MathJaxContext version={3} config={mathJaxConfig}>
-      <div className="w-full max-w-4xl mx-auto space-y-8">
-        {reasoning && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-            <div className="flex items-center gap-3 mb-6">
-              <Brain className="w-6 h-6 text-purple-600" />
-              <h3 className="text-xl font-semibold text-gray-800">Transparent Reasoning (AI)</h3>
-            </div>
-            <div className="prose max-w-none">{formatContent(reasoning)}</div>
+    <div className="w-full max-w-4xl mx-auto space-y-8">
+      {reasoning && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
+          <div className="flex items-center gap-3 mb-6">
+            <Brain className="w-6 h-6 text-purple-600" />
+            <h3 className="text-xl font-semibold text-gray-800">Transparent Reasoning (AI)</h3>
           </div>
-        )}
+          <div>{formatContent(reasoning)}</div>
+        </div>
+      )}
 
-        {audit && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
-            <div className="flex items-center gap-3 mb-6">
-              <Search className="w-6 h-6 text-teal-600" />
-              <h3 className="text-xl font-semibold text-gray-800">Self-Audit Result</h3>
-            </div>
-            <div className="prose max-w-none">{formatContent(audit)}</div>
+      {audit && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
+          <div className="flex items-center gap-3 mb-6">
+            <Search className="w-6 h-6 text-teal-600" />
+            <h3 className="text-xl font-semibold text-gray-800">Self-Audit Result</h3>
           </div>
-        )}
-      </div>
-    </MathJaxContext>
+          <div>{formatContent(audit)}</div>
+        </div>
+      )}
+    </div>
   );
 }
