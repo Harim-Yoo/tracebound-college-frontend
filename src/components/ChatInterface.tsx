@@ -480,8 +480,7 @@ ${latexContent}
 
       {/* Input */}
       <div className="p-4 border-t border-gray-200 bg-white">
-        <BackendStatus />
-        
+       
         {showImageUpload && (
           <div className="mb-4">
             <ImageUpload 
