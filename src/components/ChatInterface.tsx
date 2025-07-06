@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Download, AlertTriangle, CheckCircle, Camera, FileText, Copy } from 'lucide-react';
 import { ChatMessage, Subject } from '../types';
 import { ImageUpload } from './ImageUpload';
+import { BackendStatus } from './BackendStatus';
+import { MathRenderer } from './MathRenderer';
 
 interface ChatInterfaceProps {
   subject: Subject;
@@ -242,25 +244,9 @@ ${latexContent}
     return content.split('\n').map((line, index) => {
       if (line.trim() === '') return <br key={index} />;
       
-      // Handle LaTeX math expressions - convert to readable format
-      if (line.includes('\\(') && line.includes('\\)')) {
-        const mathContent = line.replace(/\\?\\\(/g, '').replace(/\\?\\\)/g, '');
-        return (
-          <p key={index} className="text-gray-700 mb-3 leading-relaxed bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
-            <span className="text-sm text-blue-600 font-medium">Math: </span>
-            <span className="font-mono text-gray-800">{mathContent}</span>
-          </p>
-        );
-      }
-      
-      if (line.includes('\\[') && line.includes('\\]')) {
-        const mathContent = line.replace(/\\?\\\[/g, '').replace(/\\?\\\]/g, '');
-        return (
-          <div key={index} className="text-gray-700 mb-4 leading-relaxed bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
-            <div className="text-sm text-blue-600 font-medium mb-2">Mathematical Expression:</div>
-            <div className="font-mono text-gray-800 text-lg">{mathContent}</div>
-          </div>
-        );
+      // Handle LaTeX math expressions with proper rendering
+      if (line.includes('\\(') || line.includes('\\[')) {
+        return <MathRenderer key={index} content={line} />;
       }
       
       // Handle step formatting
@@ -286,14 +272,14 @@ ${latexContent}
       if (line.startsWith('**') && line.endsWith('**')) {
         return (
           <h3 key={index} className="font-bold text-xl text-gray-800 mt-6 mb-3 text-purple-700">
-            {line.slice(2, -2)}
+            <MathRenderer content={line.slice(2, -2)} />
           </h3>
         );
       }
       
       return (
         <p key={index} className="text-gray-600 mb-3 leading-relaxed">
-          {line}
+          <MathRenderer content={line} />
         </p>
       );
     });
@@ -480,7 +466,8 @@ ${latexContent}
 
       {/* Input */}
       <div className="p-4 border-t border-gray-200 bg-white">
-       
+        <BackendStatus />
+        
         {showImageUpload && (
           <div className="mb-4">
             <ImageUpload 

@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* KaTeX CSS for math rendering */
+@import 'katex/dist/katex.min.css';
+
+/* Custom math styling */
+.math-display {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.math-inline {
+  display: inline;
+}
+
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  margin: 1.5rem 0;
+  text-align: center;
+}
