@@ -1,6 +1,6 @@
 import { Subject } from '../types';
 
-const API_BASE = 'https://tracebound-college.onrender.com/api';
+const API_BASE = 'https://tracebound-college-backend.onrender.com/api';
 
 // === Reasoning API ===
 export async function callBackendAPI(problem: string, subject: Subject): Promise<{ success: boolean; reasoning?: string; error?: string }> {
