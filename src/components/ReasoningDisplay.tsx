@@ -1,4 +1,5 @@
 import React from 'react';
+import MathJax from 'react-mathjax';
 import { Brain, Search, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface ReasoningDisplayProps {
@@ -8,101 +9,129 @@ interface ReasoningDisplayProps {
 }
 
 export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDisplayProps) {
+  // ⬇️ Handle lines with multiple inline \( ... \) LaTeX expressions
+  const renderInlineLatex = (text: string, index: number) => {
+    const parts = text.split(/(\\\(.*?\\\))/g); // split at each \( ... \)
+
+    return (
+      <MathJax.Provider key={index}>
+        <p className="text-gray-600 mb-3 leading-relaxed">
+          {parts.map((part, i) => {
+            if (part.startsWith("\\(") && part.endsWith("\\)")) {
+              const latex = part.slice(2, -2).trim();
+              return <MathJax.Node inline key={i} formula={latex} />;
+            }
+            return <span key={i}>{part}</span>;
+          })}
+        </p>
+      </MathJax.Provider>
+    );
+  };
+
   const formatContent = (content: string) => {
     return content.split('\n').map((line, index) => {
-      if (line.trim() === '') return <br key={index} />;
-      
-      // Handle LaTeX math expressions
-      if (line.includes('\\(') && line.includes('\\)')) {
+      const trimmed = line.trim();
+
+      if (trimmed === '') return <br key={index} />;
+
+      // ✅ Block LaTeX: \[ ... \]
+      if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
+        const latex = trimmed.slice(2, -2).trim();
         return (
-          <p key={index} className="text-gray-600 mb-3 leading-relaxed font-mono bg-gray-50 p-2 rounded">
-            {line}
-          </p>
+          <MathJax.Provider key={index}>
+            <div className="text-gray-600 mb-4 bg-gray-50 p-4 rounded text-center font-mono">
+              <MathJax.Node formula={latex} />
+            </div>
+          </MathJax.Provider>
         );
       }
-      
-      if (line.includes('\\[') && line.includes('\\]')) {
-        return (
-          <div key={index} className="text-gray-600 mb-4 leading-relaxed font-mono bg-gray-50 p-4 rounded text-center">
-            {line}
-          </div>
-        );
+
+      // ✅ Inline LaTeX (even multiple in one line)
+      if (trimmed.includes('\\(') && trimmed.includes('\\)')) {
+        return renderInlineLatex(trimmed, index);
       }
-      
-      // Handle step formatting
-      if (line.startsWith('Step ')) {
+
+      // 🔹 Step title
+      if (trimmed.startsWith('Step ')) {
         return (
           <div key={index} className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded-r">
-            <h4 className="font-semibold text-blue-800 mb-2">{line}</h4>
+            <h4 className="font-semibold text-blue-800 mb-2">{trimmed}</h4>
           </div>
         );
       }
-      
-      if (line.startsWith('Intermediate Formal Check:')) {
+
+      // 🔹 Intermediate formal check
+      if (trimmed.startsWith('Intermediate Formal Check:')) {
         return (
           <div key={index} className="bg-green-50 border-l-4 border-green-400 p-3 mb-3 rounded-r ml-4">
             <p className="text-green-700 text-sm">
               <CheckCircle className="w-4 h-4 inline mr-2" />
-              {line.replace('Intermediate Formal Check:', '').trim()}
+              {trimmed.replace('Intermediate Formal Check:', '').trim()}
             </p>
           </div>
         );
       }
-      
-      if (line.startsWith('**') && line.endsWith('**')) {
+
+      // 🔹 Bold headings: **Heading**
+      if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
         return (
           <h3 key={index} className="font-bold text-xl text-gray-800 mt-6 mb-3 text-purple-700 flex items-center gap-2">
-            {line.slice(2, -2)}
+            {trimmed.slice(2, -2)}
           </h3>
         );
       }
-      
-      if (line.startsWith('*') && line.endsWith('*')) {
+
+      // 🔹 Sub-headings: *Subheading*
+      if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
         return (
           <h4 key={index} className="font-semibold text-lg text-gray-700 mt-4 mb-2 flex items-center gap-2">
-            {line.slice(1, -1)}
+            {trimmed.slice(1, -1)}
           </h4>
         );
       }
-      
-      if (line.trim().startsWith('-')) {
+
+      // 🔹 Bullet list
+      if (trimmed.startsWith('-')) {
         return (
           <li key={index} className="ml-6 text-gray-600 mb-2 list-disc leading-relaxed">
-            {line.trim().slice(1).trim()}
+            {trimmed.slice(1).trim()}
           </li>
         );
       }
-      
-      if (line.match(/^\d+\./)) {
+
+      // 🔹 Numbered list
+      if (/^\d+\./.test(trimmed)) {
         return (
           <li key={index} className="ml-6 text-gray-600 mb-2 list-decimal leading-relaxed">
-            {line.replace(/^\d+\.\s*/, '')}
+            {trimmed.replace(/^\d+\.\s*/, '')}
           </li>
         );
       }
-      
-      // Handle special audit indicators
-      if (line.includes('✅')) {
+
+      // 🔹 ✅ verdict
+      if (trimmed.includes('✅')) {
         return (
           <div key={index} className="bg-green-50 border border-green-200 p-3 mb-2 rounded flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-green-600" />
-            <span className="text-green-700">{line}</span>
+            <span className="text-green-700">{trimmed}</span>
           </div>
         );
       }
-      
-      if (line.includes('❌')) {
+
+      // 🔹 ❌ verdict
+      if (trimmed.includes('❌')) {
         return (
           <div key={index} className="bg-red-50 border border-red-200 p-3 mb-2 rounded flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-600" />
-            <span className="text-red-700">{line}</span>
+            <span className="text-red-700">{trimmed}</span>
           </div>
         );
       }
-      
+
+      // Default paragraph
       return (
         <p key={index} className="text-gray-600 mb-3 leading-relaxed">
-          {line}
+          {trimmed}
         </p>
       );
     });
@@ -128,9 +157,7 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
     );
   }
 
-  if (!reasoning && !audit) {
-    return null;
-  }
+  if (!reasoning && !audit) return null;
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8">
@@ -140,9 +167,7 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
             <Brain className="w-6 h-6 text-purple-600" />
             <h3 className="text-xl font-semibold text-gray-800">Transparent Reasoning (AI)</h3>
           </div>
-          <div className="prose max-w-none">
-            {formatContent(reasoning)}
-          </div>
+          <div className="prose max-w-none">{formatContent(reasoning)}</div>
         </div>
       )}
 
@@ -152,9 +177,7 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
             <Search className="w-6 h-6 text-teal-600" />
             <h3 className="text-xl font-semibold text-gray-800">Self-Audit Result</h3>
           </div>
-          <div className="prose max-w-none">
-            {formatContent(audit)}
-          </div>
+          <div className="prose max-w-none">{formatContent(audit)}</div>
         </div>
       )}
     </div>
