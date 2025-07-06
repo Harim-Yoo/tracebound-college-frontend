@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { Brain, Search, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -8,9 +8,27 @@ interface ReasoningDisplayProps {
   isLoading: boolean;
 }
 
+const mathJaxConfig = {
+  loader: { load: ["[tex]/ams"] },
+  tex: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    packages: { "[+]": ["ams"] },
+  },
+};
+
 export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDisplayProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // 강제로 MathJax 렌더링 트리거
+    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+      window.MathJax.typesetPromise();
+    }
+  }, [reasoning, audit]);
+
   const renderInlineLatex = (text: string, index: number) => {
-    const parts = text.split(/(\\\(.*?\\\))/g); // split at each \( ... \)
+    const parts = text.split(/(\\\(.*?\\\))/g); // \( ... \) 구분
 
     return (
       <p key={index} className="text-gray-600 mb-3 leading-relaxed">
@@ -143,8 +161,8 @@ export function ReasoningDisplay({ reasoning, audit, isLoading }: ReasoningDispl
   if (!reasoning && !audit) return null;
 
   return (
-    <MathJaxContext version={3}>
-      <div className="w-full max-w-4xl mx-auto space-y-8">
+    <MathJaxContext version={3} config={mathJaxConfig}>
+      <div className="w-full max-w-4xl mx-auto space-y-8" ref={contentRef}>
         {reasoning && (
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
             <div className="flex items-center gap-3 mb-6">
