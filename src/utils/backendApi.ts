@@ -49,7 +49,7 @@ export async function callOCRAPI(imageFile: File): Promise<{ success: boolean; t
     const formData = new FormData();
     formData.append('image', imageFile);
 
-    const response = await fetch(`${API_BASE}/ocr`, {
+    const response = await fetch(`${API_BASE}/api/ocr`, {
       method: 'POST',
       body: formData
     });
