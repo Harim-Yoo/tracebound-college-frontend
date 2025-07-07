@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Download, AlertTriangle, CheckCircle, Camera, FileText, Copy } from 'lucide-react';
 import { ChatMessage, Subject } from '../types';
 import { ImageUpload } from './ImageUpload';
-import { BackendStatus } from './BackendStatus';
 import { MathRenderer } from './MathRenderer';
 
 interface ChatInterfaceProps {
@@ -466,8 +465,6 @@ ${latexContent}
 
       {/* Input */}
       <div className="p-4 border-t border-gray-200 bg-white">
-        <BackendStatus />
-        
         {showImageUpload && (
           <div className="mb-4">
             <ImageUpload 
