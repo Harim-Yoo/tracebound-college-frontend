@@ -9,54 +9,84 @@ interface MathRendererProps {
 export function MathRenderer({ content }: MathRendererProps) {
   const renderMathContent = (text: string) => {
     const parts: React.ReactNode[] = [];
-    let lastIndex = 0;
     
-    // Handle display math \\[ ... \\]
-    const displayMathRegex = /\\?\\\[(.*?)\\?\\\]/gs;
-    let match;
+    // Handle display math first: \[ ... \] or $$ ... $$
+    let processedText = text;
     
-    // First pass: handle display math
-    const textAfterDisplay = text.replace(displayMathRegex, (match, mathContent) => {
-      return `__DISPLAY_MATH_${mathContent}__`;
+    // Replace display math with placeholders
+    const displayMathMatches: { placeholder: string; content: string }[] = [];
+    let displayIndex = 0;
+    
+    // Handle \[ ... \]
+    processedText = processedText.replace(/\\\[(.*?)\\\]/gs, (match, mathContent) => {
+      const placeholder = `__DISPLAY_MATH_${displayIndex}__`;
+      displayMathMatches.push({ placeholder, content: mathContent.trim() });
+      displayIndex++;
+      return placeholder;
     });
     
-    // Second pass: handle inline math \\( ... \\)
-    const inlineMathRegex = /\\?\\\((.*?)\\?\\\)/gs;
-    const segments = textAfterDisplay.split(inlineMathRegex);
+    // Handle $$ ... $$
+    processedText = processedText.replace(/\$\$(.*?)\$\$/gs, (match, mathContent) => {
+      const placeholder = `__DISPLAY_MATH_${displayIndex}__`;
+      displayMathMatches.push({ placeholder, content: mathContent.trim() });
+      displayIndex++;
+      return placeholder;
+    });
     
-    for (let i = 0; i < segments.length; i++) {
-      const segment = segments[i];
-      
-      if (i % 2 === 0) {
-        // Regular text or display math placeholders
-        if (segment.includes('__DISPLAY_MATH_')) {
-          const displayParts = segment.split(/(__DISPLAY_MATH_.*?__)/);
-          displayParts.forEach((part, idx) => {
-            if (part.startsWith('__DISPLAY_MATH_') && part.endsWith('__')) {
-              const mathContent = part.replace('__DISPLAY_MATH_', '').replace('__', '');
-              parts.push(
-                <div key={`display-${i}-${idx}`} className="math-display my-4">
-                  <BlockMath math={mathContent.trim()} />
-                </div>
-              );
-            } else if (part.trim()) {
-              parts.push(<span key={`text-${i}-${idx}`}>{part}</span>);
-            }
-          });
-        } else if (segment.trim()) {
-          parts.push(<span key={`text-${i}`}>{segment}</span>);
-        }
-      } else {
-        // Inline math content
+    // Now handle inline math: \( ... \) or $ ... $
+    const inlineMathMatches: { placeholder: string; content: string }[] = [];
+    let inlineIndex = 0;
+    
+    // Handle \( ... \)
+    processedText = processedText.replace(/\\\((.*?)\\\)/gs, (match, mathContent) => {
+      const placeholder = `__INLINE_MATH_${inlineIndex}__`;
+      inlineMathMatches.push({ placeholder, content: mathContent.trim() });
+      inlineIndex++;
+      return placeholder;
+    });
+    
+    // Handle single $ ... $ (but not $$)
+    processedText = processedText.replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (match, mathContent) => {
+      const placeholder = `__INLINE_MATH_${inlineIndex}__`;
+      inlineMathMatches.push({ placeholder, content: mathContent.trim() });
+      inlineIndex++;
+      return placeholder;
+    });
+    
+    // Split by display math placeholders first
+    const displayParts = processedText.split(/(__DISPLAY_MATH_\d+__)/);
+    
+    displayParts.forEach((part, idx) => {
+      const displayMatch = displayMathMatches.find(m => m.placeholder === part);
+      if (displayMatch) {
+        // This is a display math block
         parts.push(
-          <span key={`inline-${i}`} className="math-inline">
-            <InlineMath math={segment.trim()} />
-          </span>
+          <div key={`display-${idx}`} className="math-display my-4">
+            <BlockMath math={displayMatch.content} />
+          </div>
         );
+      } else {
+        // This might contain inline math, process it
+        const inlineParts = part.split(/(__INLINE_MATH_\d+__)/);
+        
+        inlineParts.forEach((inlinePart, inlineIdx) => {
+          const inlineMatch = inlineMathMatches.find(m => m.placeholder === inlinePart);
+          if (inlineMatch) {
+            // This is inline math
+            parts.push(
+              <span key={`inline-${idx}-${inlineIdx}`} className="math-inline">
+                <InlineMath math={inlineMatch.content} />
+              </span>
+            );
+          } else if (inlinePart.trim()) {
+            // Regular text
+            parts.push(<span key={`text-${idx}-${inlineIdx}`}>{inlinePart}</span>);
+          }
+        });
       }
-    }
+    });
     
-    return parts;
+    return parts.length > 0 ? parts : [<span key="fallback">{text}</span>];
   };
 
   return <div className="math-content">{renderMathContent(content)}</div>;

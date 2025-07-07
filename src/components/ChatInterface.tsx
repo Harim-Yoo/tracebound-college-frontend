@@ -243,11 +243,6 @@ ${latexContent}
     return content.split('\n').map((line, index) => {
       if (line.trim() === '') return <br key={index} />;
       
-      // Handle LaTeX math expressions with proper rendering
-      if (line.includes('\\(') || line.includes('\\[')) {
-        return <MathRenderer key={index} content={line} />;
-      }
-      
       // Handle step formatting
       if (line.startsWith('Step ')) {
         return (
